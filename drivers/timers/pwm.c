@@ -249,6 +249,7 @@ static int pwm_close(FAR struct file *filep)
       pwminfo("calling shutdown\n");
 
       lower->ops->shutdown(lower);
+      upper->started = false;
     }
 
   nxmutex_unlock(&upper->lock);
