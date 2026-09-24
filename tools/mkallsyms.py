@@ -58,28 +58,27 @@ class SymbolTables(object):
             return None
         return symbol
 
-    def print_symbol_tables(self, isnoconst=False):
-        noconst = "const"
-        if not isnoconst:
-            noconst = ""
+    def print_symbol_tables(self, noconst=False):
+        const = "" if noconst else "const"
 
         self.emitline("#include <nuttx/compiler.h>")
         self.emitline("#include <nuttx/symtab.h>\n")
-        self.emitline("extern int g_nallsyms;\n")
+        self.emitline("extern %s int g_nallsyms;\n" % const)
         self.emitline(
-            "extern struct symtab_s g_allsyms[%d + 2];\n" % len(self.symbol_list)
+            "extern %s struct symtab_s g_allsyms[%d + 2];\n"
+            % (const, len(self.symbol_list))
         )
-        self.emitline("%s int g_nallsyms = %d + 2;" % (noconst, len(self.symbol_list)))
+        self.emitline("%s int g_nallsyms = %d + 2;" % (const, len(self.symbol_list)))
         self.emitline(
             "%s struct symtab_s g_allsyms[%d + 2] =\n{"
-            % (noconst, len(self.symbol_list))
+            % (const, len(self.symbol_list))
         )
-        self.emitline('  { "Unknown", (FAR %s void *)0x00000000 },' % (noconst))
+        self.emitline('  { "Unknown", (FAR %s void *)0x00000000 },' % (const))
         for symbol in self.symbol_list:
             self.emitline(
-                '  { "%s", (FAR %s void *)%s },' % (symbol[1], noconst, hex(symbol[0]))
+                '  { "%s", (FAR %s void *)%s },' % (symbol[1], const, hex(symbol[0]))
             )
-        self.emitline('  { "Unknown", (FAR %s void *)0xffffffff }\n};' % (noconst))
+        self.emitline('  { "Unknown", (FAR %s void *)0xffffffff }\n};' % (const))
 
     def get_symtable(self):
         symbol_tables = [
@@ -141,7 +140,11 @@ if __name__ == "__main__":
         default=sys.stdout,
         help="Output file to write symbols to (default: stdout).",
     )
-    parser.add_argument("--noconst", action="store_true", help="Exclude const symbols.")
+    parser.add_argument(
+        "--noconst",
+        action="store_true",
+        help="Emit writable tables without const (sim relocates them).",
+    )
     parser.add_argument(
         "--version",
         action="version",

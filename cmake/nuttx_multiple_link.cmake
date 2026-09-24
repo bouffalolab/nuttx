@@ -20,12 +20,18 @@
 #
 # ##############################################################################
 
+# sim relocates the symbol table at boot, so only it needs a writable table
+if(CONFIG_ARCH_SIM)
+  set(MKALLSYMS_FLAGS --noconst)
+endif()
+
 # create an empty allsyms source file for `nuttx`
 if(CONFIG_ALLSYMS)
   set(ALLSYMS_SOURCE ${CMAKE_BINARY_DIR}/allsyms_empty.c)
   add_custom_command(
     OUTPUT ${ALLSYMS_SOURCE}
     COMMAND ${NUTTX_DIR}/tools/mkallsyms.py nuttx.empty ${ALLSYMS_SOURCE}
+            ${MKALLSYMS_FLAGS}
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     COMMENT "Generating allsyms_empty.c")
   add_custom_target(generate_empty_allsyms DEPENDS ${ALLSYMS_SOURCE})
@@ -88,7 +94,7 @@ macro(define_multiple_link_target inter_target dep_target linktimes)
     add_custom_command(
       OUTPUT ${LINK_ALLSYMS_SOURCE} POST_BUILD
       COMMAND ${NUTTX_DIR}/tools/mkallsyms.py ${CMAKE_BINARY_DIR}/${dep_target}
-              ${LINK_ALLSYMS_SOURCE}
+              ${LINK_ALLSYMS_SOURCE} ${MKALLSYMS_FLAGS}
       DEPENDS ${dep_target}
       WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
       COMMAND_EXPAND_LISTS)
