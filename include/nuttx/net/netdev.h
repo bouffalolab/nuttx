@@ -816,6 +816,32 @@ void netdev_carrier_on(FAR struct net_driver_s *dev);
 void netdev_carrier_off(FAR struct net_driver_s *dev);
 
 /****************************************************************************
+ * Name: checksum
+ *
+ * Description:
+ *   Calculate the raw change sum over the memory region described by
+ *   data and len, continuing a sum whose previous region may have ended
+ *   on an odd byte.  chksum_iob() uses it to walk an iob chain.
+ *
+ *   If CONFIG_NET_ARCH_CHKSUM is defined, then this function must be
+ *   provided by architecture-specific logic.
+ *
+ * Input Parameters:
+ *   sum  - Partial calculations carried over from a previous call.
+ *   data - Beginning of the data to include in the checksum.
+ *   len  - Length of the data to include in the checksum.
+ *   odd  - On entry, true if the previous region ended on an odd byte.
+ *          On return, true if this region ends on an odd byte.
+ *
+ * Returned Value:
+ *   The updated checksum value.
+ *
+ ****************************************************************************/
+
+uint16_t checksum(uint16_t sum, FAR const uint8_t *data, uint16_t len,
+                  FAR bool *odd);
+
+/****************************************************************************
  * Name: chksum
  *
  * Description:
