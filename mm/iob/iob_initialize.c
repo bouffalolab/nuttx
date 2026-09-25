@@ -177,7 +177,12 @@ void iob_initialize(void)
 
       iob->io_flink   = g_iob_freelist;
 #ifdef CONFIG_IOB_ALLOC
+      /* CONFIG_IOB_SECTION may place the pool in memory that is not
+       * zeroed at boot, and iob_free() calls any non-NULL io_free.
+       */
+
       iob->io_bufsize = CONFIG_IOB_BUFSIZE;
+      iob->io_free    = NULL;
       iob->io_data    = (FAR uint8_t *)(iob + 1);
 #endif
       g_iob_freelist  = iob;
