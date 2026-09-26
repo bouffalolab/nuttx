@@ -855,6 +855,7 @@ static inline_function int devif_poll_arp(FAR struct net_driver_s *dev,
 static int devif_poll_connections(FAR struct net_driver_s *dev,
                                   devif_poll_callback_t callback)
 {
+  uint32_t polled = 0;
   int bstop = false;
   int i;
 
@@ -863,16 +864,21 @@ static int devif_poll_connections(FAR struct net_driver_s *dev,
   dev->d_len = 0;
 
   /* Traverse all of the active packet connections and perform the poll
-   * action.
+   * action.  Each poll type is served at most once per call, and its bit is
+   * cleared before the pass: a protocol that finds no buffer for its packet
+   * sets the bit again, so that the next call polls it once more.
    */
 
   while (!bstop)
     {
-      i = ffsl(dev->d_polltype);
+      i = ffsl(dev->d_polltype & ~polled);
       if (i == 0)
         {
           break;
         }
+
+      polled |= 1 << (i - 1);
+      dev->d_polltype &= ~(1 << (i - 1));
 
       switch (1 << (i - 1))
         {
@@ -999,9 +1005,9 @@ static int devif_poll_connections(FAR struct net_driver_s *dev,
             break;
         }
 
-      if (!bstop)
+      if (bstop)
         {
-          dev->d_polltype &= ~(1 << (i - 1));
+          dev->d_polltype |= 1 << (i - 1);
         }
     }
 

@@ -93,6 +93,11 @@ void tcp_poll(FAR struct net_driver_s *dev, FAR struct tcp_conn_s *conn)
 
   if (netdev_iob_prepare(dev, false, 0) != OK)
     {
+      /* Poll TCP again on the next devif_poll(), after the driver has
+       * freed some buffers.
+       */
+
+      dev->d_polltype |= TCP_POLL;
       return;
     }
 
