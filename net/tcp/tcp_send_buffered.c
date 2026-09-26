@@ -1117,6 +1117,11 @@ static uint32_t psock_send_eventhandler(FAR struct net_driver_s *dev,
                                TCP_WBSENT(wrb), tcpip_hdrsize(conn));
           if (ret <= 0)
             {
+              /* Retry on the next devif_poll().  With nothing in flight no
+               * ACK or retransmission timer would bring this data out.
+               */
+
+              dev->d_polltype |= TCP_POLL;
               return flags;
             }
 
