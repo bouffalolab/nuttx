@@ -177,15 +177,26 @@ ssize_t netprocfs_read_tcpstats(FAR struct netprocfs_file_s *priv,
           priv->offset = 1;
         }
 
+      /* snprintf() returns the length it would have written.  A buffer
+       * shorter than the header gets it truncated and has no room left.
+       */
+
+      if ((size_t)len >= buflen)
+        {
+          len = buflen > 0 ? buflen - 1 : 0;
+        }
+      else
+        {
 #ifdef CONFIG_NET_IPv4
-      len += netprocfs_tcpstats(priv, buffer + len,
-                                buflen - len, PF_INET, &skip);
+          len += netprocfs_tcpstats(priv, buffer + len,
+                                    buflen - len, PF_INET, &skip);
 #endif /* CONFIG_NET_IPv4 */
 
 #ifdef CONFIG_NET_IPv6
-      len += netprocfs_tcpstats(priv, buffer + len,
-                                buflen - len, PF_INET6, &skip);
+          len += netprocfs_tcpstats(priv, buffer + len,
+                                    buflen - len, PF_INET6, &skip);
 #endif /* CONFIG_NET_IPv6 */
+        }
     }
 
   tcp_conn_list_unlock();
